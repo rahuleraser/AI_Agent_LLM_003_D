@@ -12,7 +12,6 @@ TARGET_EXCHANGE = "NSE_EQ"
 TARGET_QTY = 10               # Only monitor if exactly 10 shares are held
 
 STOP_LOSS_PAISA = 0.30        # Maximum allowed drop from peak (30 Paisa)
-TRAIL_ACTIVATION = 0.40       # Profit required before trailing starts aggressively
 SCAN_INTERVAL_SEC = 30        # Scan delay in seconds
 MAX_SCANS = 10                # Run exactly 10 times
 
@@ -111,19 +110,19 @@ def run_scanner():
 
                     state = position_tracker[sec_id]
                     
-                    # 1. CHECK TRAILING PROFIT LOGIC
+                    # 1. IMMEDIATE TRAILING PROFIT LOGIC
+                    # If current market price rises above our previously logged high water mark
                     if current_ltp > state['highest_price']:
                         state['highest_price'] = current_ltp
                         
-                        # Only start trailing the SL aggressively once we hit our target activation
-                        if (current_ltp - state['buy_price']) >= TRAIL_ACTIVATION:
-                            new_sl = current_ltp - STOP_LOSS_PAISA
-                            
-                            if new_sl > state['current_sl']:
-                                state['current_sl'] = new_sl
-                                logging.info(
-                                    f"[PROFIT LOCKED / SL UP] YESBANK | New High: ₹{current_ltp:.2f} | Upgraded SL: ₹{state['current_sl']:.2f}"
-                                )
+                        # Automatically trail the stop loss upward from the new high
+                        new_sl = current_ltp - STOP_LOSS_PAISA
+                        
+                        if new_sl > state['current_sl']:
+                            state['current_sl'] = new_sl
+                            logging.info(
+                                f"[SL AUTO-UPGRADED] YESBANK | New High: ₹{current_ltp:.2f} | Trailed SL to: ₹{state['current_sl']:.2f}"
+                            )
 
                     # 2. CHECK STOP LOSS / PROFIT BOOKING TRIGGER
                     if current_ltp <= state['current_sl']:
