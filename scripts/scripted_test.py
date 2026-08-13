@@ -74,6 +74,9 @@ def parse_args():
                    help="scan interval seconds (default from config.py = 30)")
     p.add_argument("--qty", type=int, default=None,
                    help="quantity per cycle (default from config.py = 10)")
+    p.add_argument("--cycles", type=int, default=1,
+                   help="number of trade cycles to run (default 1, since a scripted "
+                        "price path is one trade's worth of observations)")
     return p.parse_args()
 
 
@@ -94,6 +97,7 @@ def main():
     if args.qty is not None:
         cfg.QTY = args.qty
     cfg.MAX_MONITOR_SCANS = args.scans
+    cfg.MAX_CYCLES = args.cycles
 
     feed = ScriptedFeed(args.buy_ltp, fill, args.prices)
     TrailingTrader(cfg, feed).run()

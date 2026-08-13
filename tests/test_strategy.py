@@ -132,6 +132,24 @@ class ScriptedScenarioTest(unittest.TestCase):
         self.assertEqual(record["outcome"], "LOSS")    # force square-off result
         self.assertEqual(record["pnl"], -0.6)          # (20.87 - 20.93) * 10
 
+    def test_exact_user_scenario_triggers_at_20_56(self):
+        # Buy @ 20.93, market path: 20.88 20.92 20.96 20.88 20.82 20.88
+        # 20.80 20.96 20.56 20.99. Stop stays 20.63 (profit never reaches
+        # +30 paisa, so no trailing) -> exit triggers on the 20.56 scan.
+        prices = [20.88, 20.92, 20.96, 20.88, 20.82, 20.88, 20.80, 20.96, 20.56, 20.99]
+        feed = FakeFeed(quotes=[20.95] + prices, sell_price=20.55)
+        trader = make_trader(feed, MAX_MONITOR_SCANS=len(prices))
+        record = trader.run_cycle(1)
+
+        state = trader._last_monitor_state
+        self.assertEqual(feed.buy_price, 20.93)
+        self.assertEqual(state["stop"], 20.63)         # buy - 30 paisa (never trailed)
+        self.assertEqual(state["trail_updates"], 0)    # max profit was only 3 paisa
+        self.assertEqual(state["scans"], 9)            # exited on the 9th scan (20.56)
+        self.assertEqual(feed.sell_count, 1)
+        self.assertEqual(record["outcome"], "LOSS")
+        self.assertEqual(record["pnl"], -3.8)          # (20.55 - 20.93) * 10
+
 
 if __name__ == "__main__":
     unittest.main()
