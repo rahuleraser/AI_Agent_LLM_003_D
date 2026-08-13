@@ -115,5 +115,23 @@ class LossStopTest(unittest.TestCase):
         self.assertEqual(trader.loss_count, 0)
 
 
+class ScriptedScenarioTest(unittest.TestCase):
+    def test_market_stuck_5_paisa_below_buy_never_triggers(self):
+        # Buy fills at 20.93, market stuck at 20.88 for 10 scans.
+        # 20.88 is only 5 paisa below buy -> stop (20.63) is NOT hit, so the
+        # bot just keeps scanning until the force square-off cap.
+        feed = FakeFeed(quotes=[20.95] + [20.88] * 10, sell_price=20.87)
+        trader = make_trader(feed, MAX_MONITOR_SCANS=10)
+        record = trader.run_cycle(1)
+
+        state = trader._last_monitor_state
+        self.assertEqual(feed.buy_price, 20.93)        # LTP - 2 paisa
+        self.assertEqual(state["stop"], 20.63)         # buy - 30 paisa
+        self.assertEqual(state["trail_updates"], 0)    # never went up
+        self.assertEqual(state["scans"], 10)           # scanned all 10 values
+        self.assertEqual(record["outcome"], "LOSS")    # force square-off result
+        self.assertEqual(record["pnl"], -0.6)          # (20.87 - 20.93) * 10
+
+
 if __name__ == "__main__":
     unittest.main()
