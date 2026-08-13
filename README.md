@@ -13,7 +13,8 @@ For each trade cycle:
 
 1. **Check market** - reads current LTP, day high and day low.
 2. **Buy** - places a LIMIT order for 10 shares at `current price - 2 paisa`.
-3. **Monitor** - after the buy fills, scans live price every 30 seconds.
+3. **Monitor** - after the buy fills, scans live price every 30 seconds (max
+   10 scans, then it squares off automatically).
 4. **Up direction** - once profit exceeds 30 paisa, the stop keeps moving up to
    `latest peak - 30 paisa`, locking in maximum profit.
 5. **Down direction** - the moment price falls 30 paisa below the latest peak,
@@ -67,6 +68,7 @@ Everything you would normally want to change is in **`config.py`**:
 | `STOP_LOSS_PAISA`             | sell N paisa below the latest peak             | 30        |
 | `TRAIL_ACTIVATION_PAISA`      | start trailing after N paisa profit            | 30        |
 | `SCAN_INTERVAL_SEC`           | live market scan interval                      | 30        |
+| `MAX_MONITOR_SCANS`           | scan only N times (every 30s), then square-off | 10        |
 | `MAX_CYCLES`                  | total trade cycles                             | 10        |
 | `MAX_LOSS_CYCLES`             | halt the script after N losing trades          | 3         |
 | `SECURITY_ID` / `EXCHANGE_SEGMENT` | instrument to trade                       | 11915 / NSE_EQ |

@@ -50,7 +50,7 @@ class Config:
     TRAIL_ACTIVATION_PAISA = 30    # only start trailing after 30 paisa profit
     SCAN_INTERVAL_SEC = 30         # live market scan interval (seconds)
 
-    MAX_MONITOR_SCANS = 200        # safety cap: force square-off if no exit
+    MAX_MONITOR_SCANS = 10         # scan only 10 times (every 30s), then square-off
 
     # ------------------------------------------------------------------ #
     # Run limits                                                         #
